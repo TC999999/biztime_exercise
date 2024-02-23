@@ -22,15 +22,15 @@ router.get("/:code", async (req, res, next) => {
     if (companySelect.rows.length === 0) {
       throw new ExpressError(`No company with code of ${code}`, 404);
     }
-    const companyObj = companySelect.rows[0];
+    const company = companySelect.rows[0];
 
     const invoicesSelect = await db.query(
-      "SELECT * FROM invoices WHERE comp_code=$1",
+      "SELECT id, amt, paid, add_date, paid_date FROM invoices WHERE comp_code=$1",
       [code]
     );
     const invoices = invoicesSelect.rows;
 
-    const company = { ...companyObj, invoices };
+    company.invoices = invoices;
     return res.json({ company });
   } catch (err) {
     return next(err);
