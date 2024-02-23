@@ -1,13 +1,13 @@
 /** BizTime express application. */
 
 const express = require("express");
-const middleware = require("./middleware");
+// const middleware = require("./middleware");
 
 const app = express();
 const ExpressError = require("./expressError");
 
 app.use(express.json());
-app.use(middleware.logger);
+// app.use(middleware.logger);
 
 const cRoutes = require("./routes/companies");
 app.use("/companies", cRoutes);
