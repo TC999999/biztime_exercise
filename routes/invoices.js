@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const db = require("../db");
 const ExpressError = require("../expressError");
+const middleware = require("../middleware");
 
 router.get("/", async (req, res, next) => {
   try {
@@ -32,7 +33,7 @@ router.get("/:id", async (req, res, next) => {
   }
 });
 
-router.post("/", async (req, res, next) => {
+router.post("/", middleware.checkInvoicesPosts, async (req, res, next) => {
   try {
     const { comp_code, amt } = req.body;
     const results = await db.query(
@@ -48,11 +49,25 @@ router.post("/", async (req, res, next) => {
 router.patch("/:id", async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { amt } = req.body;
-    const results = await db.query(
-      "UPDATE invoices SET amt=$1 WHERE id=$2 RETURNING *",
-      [amt, id]
-    );
+    const { amt, paid } = req.body;
+    let results;
+    if (paid == true) {
+      results = await db.query(
+        "UPDATE invoices SET amt=$1, paid=$2, paid_date=CURRENT_DATE WHERE id=$3 RETURNING *",
+        [amt, paid, id]
+      );
+    } else if (paid == false) {
+      results = await db.query(
+        "UPDATE invoices SET amt=$1, paid=$2, paid_date=null WHERE id=$3 RETURNING *",
+        [amt, paid, id]
+      );
+    } else {
+      results = await db.query(
+        "UPDATE invoices SET amt=$1 WHERE id=$2 RETURNING *",
+        [amt, id]
+      );
+    }
+
     if (results.rows.length === 0) {
       throw new ExpressError(`No invoice with id of ${id}`, 404);
     }

@@ -77,10 +77,44 @@ describe("POST /invoices", () => {
 });
 
 describe("PATCH /invoices/:id", () => {
-  test("Updates a single invoice", async () => {
+  test("Updates a single invoice not paid yet", async () => {
     const res = await request(app)
       .patch(`/invoices/${testInvoice.id}`)
       .send({ amt: 300 });
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toEqual({
+      invoice: {
+        id: expect.any(Number),
+        comp_code: "test",
+        amt: 300,
+        paid: false,
+        add_date: testInvoice.add_date,
+        paid_date: null,
+      },
+    });
+  });
+
+  test("Updates a single invoice when paid", async () => {
+    const res = await request(app)
+      .patch(`/invoices/${testInvoice.id}`)
+      .send({ amt: 300, paid: true });
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toEqual({
+      invoice: {
+        id: expect.any(Number),
+        comp_code: "test",
+        amt: 300,
+        paid: true,
+        add_date: testInvoice.add_date,
+        paid_date: testInvoice.add_date,
+      },
+    });
+  });
+
+  test("Updates a single invoice when unpaid", async () => {
+    const res = await request(app)
+      .patch(`/invoices/${testInvoice.id}`)
+      .send({ amt: 300, paid: false });
     expect(res.statusCode).toBe(200);
     expect(res.body).toEqual({
       invoice: {
