@@ -25,6 +25,29 @@ router.get("/", async (req, res, next) => {
   }
 });
 
+router.get("/:code", async (req, res, next) => {
+  try {
+    const results = await db.query(
+      "SELECT i.code AS code, i.name AS name, c.code AS company_code FROM industries as i JOIN companies_industries AS ci ON i.code=ci.industry_code JOIN companies AS c ON ci.comp_code=c.code WHERE i.code=$1",
+      [req.params.code]
+    );
+    if (results.rows.length === 0) {
+      throw new ExpressError(
+        `Industry not found with code ${req.params.code}`,
+        404
+      );
+    }
+    const { name, code } = results.rows[0];
+    let companies = results.rows.map((val) => {
+      return val.company_code;
+    });
+    console.log(companies);
+    return res.json({ industry: { code, name, companies } });
+  } catch (err) {
+    return next(err);
+  }
+});
+
 router.post("/", middleware.checkIndustriesPosts, async (req, res, next) => {
   try {
     const { code, name } = req.body;
@@ -57,5 +80,39 @@ router.post(
     }
   }
 );
+
+router.patch("/:code", async (req, res, next) => {
+  try {
+    const results = await db.query(
+      "UPDATE industries SET name=$1 WHERE code=$2 RETURNING *",
+      [req.body.name, req.params.code]
+    );
+    if (results.rows.length === 0) {
+      throw new ExpressError(
+        `Industry not found with code ${req.params.code}`,
+        404
+      );
+    }
+    return res.json({ industry: results.rows[0] });
+  } catch (err) {
+    return next(err);
+  }
+});
+
+router.delete("/:code", async (req, res, next) => {
+  try {
+    const findInd = await db.query("SELECT code FROM industries");
+    if (findInd.rows.length === 0) {
+      throw new ExpressError(
+        `Industry not found with code ${req.params.code}`,
+        404
+      );
+    }
+    await db.query("DELETE FROM industries WHERE code=$1", [req.params.code]);
+    return res.json({ status: "deleted" });
+  } catch (err) {
+    return next(err);
+  }
+});
 
 module.exports = router;
