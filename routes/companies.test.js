@@ -32,7 +32,9 @@ describe("GET /companies/:code", () => {
   test("Get a single company", async () => {
     const res = await request(app).get(`/companies/${testCompany.code}`);
     expect(res.statusCode).toBe(200);
-    expect(res.body).toEqual({ company: { ...testCompany, invoices: [] } });
+    expect(res.body).toEqual({
+      company: { ...testCompany, invoices: [], industries: [] },
+    });
   });
 
   test("Responds with 404 when invalid code", async () => {

@@ -32,7 +32,16 @@ router.get("/:code", async (req, res, next) => {
     );
     const invoices = invoicesSelect.rows;
 
+    const industriesSelect = await db.query(
+      "SELECT i.name FROM companies AS c JOIN companies_industries AS ci ON c.code=ci.comp_code JOIN industries AS i ON ci.industry_code=i.code WHERE c.code=$1",
+      [code]
+    );
+    const industries = industriesSelect.rows.map((i) => {
+      return i.name;
+    });
+
     company.invoices = invoices;
+    company.industries = industries;
     return res.json({ company });
   } catch (err) {
     return next(err);

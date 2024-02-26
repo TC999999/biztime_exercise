@@ -32,4 +32,34 @@ function checkInvoicesPosts(req, res, next) {
   }
 }
 
-module.exports = { logger, checkCompaniesPosts, checkInvoicesPosts };
+function checkIndustriesPosts(req, res, next) {
+  try {
+    if (!req.body.code || !req.body.name) {
+      throw new ExpressError("Requires a company name", 400);
+    } else {
+      return next();
+    }
+  } catch (err) {
+    return next(err);
+  }
+}
+
+function checkIndustriesCompaniesPosts(req, res, next) {
+  try {
+    if (!req.body.company_name) {
+      throw new ExpressError("Requires a company name", 400);
+    } else {
+      return next();
+    }
+  } catch (err) {
+    return next(err);
+  }
+}
+
+module.exports = {
+  logger,
+  checkCompaniesPosts,
+  checkInvoicesPosts,
+  checkIndustriesPosts,
+  checkIndustriesCompaniesPosts,
+};
