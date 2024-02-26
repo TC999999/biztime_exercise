@@ -7,11 +7,8 @@ function logger(req, res, next) {
 
 function checkCompaniesPosts(req, res, next) {
   try {
-    if (!req.body.code || !req.body.name) {
-      throw new ExpressError(
-        "Requires both company code and company name",
-        400
-      );
+    if (!req.body.name) {
+      throw new ExpressError("Requires a company name", 400);
     } else {
       return next();
     }

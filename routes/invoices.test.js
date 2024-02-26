@@ -3,7 +3,6 @@ process.env.NODE_ENV = "test";
 const request = require("supertest");
 const app = require("../app");
 const db = require("../db");
-const { json } = require("express");
 
 let testCompany;
 let testInvoice;
@@ -18,9 +17,6 @@ beforeEach(async () => {
   );
   let jsonStr = JSON.stringify(invoiceResult.rows[0]);
   testInvoice = JSON.parse(jsonStr);
-  //   testInvoice.id = String(testInvoice.id);
-  //   console.log(testCompany);
-  //   console.log(testInvoice);
 });
 
 afterEach(async () => {
