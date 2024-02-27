@@ -43,6 +43,21 @@ describe("GET /industries", () => {
   });
 });
 
+describe("GET /industries/:industry_code", () => {
+  test("Get a single industry", async () => {
+    const res = await request(app).get(`/industries/${testIndustry.code}`);
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toEqual({
+      industry: { ...testIndustry, companies: [testCompany.code] },
+    });
+  });
+
+  test("Responds with 404 when invalid industry code", async () => {
+    const res = await request(app).get(`/industries/idontexist`);
+    expect(res.statusCode).toBe(404);
+  });
+});
+
 describe("POST /industries", () => {
   test("Creates a single industry", async () => {
     const res = await request(app)
@@ -72,5 +87,42 @@ describe("POST /industries/:industry_code", () => {
         industry_code: "tech",
       },
     });
+  });
+});
+
+describe("PATCH /industries/:industry_code", () => {
+  test("Updates a single industry", async () => {
+    const res = await request(app)
+      .patch(`/industries/${testIndustry.code}`)
+      .send({ name: "Not Accounting" });
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toEqual({
+      industry: {
+        code: testIndustry.code,
+        name: "Not Accounting",
+      },
+    });
+  });
+
+  test("Responds with 404 when invalid industry code", async () => {
+    const res = await request(app)
+      .patch(`/industries/idontexist`)
+      .send({ name: "Non-Existent Industry" });
+    expect(res.statusCode).toBe(404);
+  });
+});
+
+describe("DELETE /industries/:industry_code", () => {
+  test("Deletes a single industry", async () => {
+    const res = await request(app).delete(`/industries/${testIndustry.code}`);
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toEqual({
+      status: "deleted",
+    });
+  });
+
+  test("Responds with 404 when invalid industry code", async () => {
+    const res = await request(app).delete(`/industries/idontexist`);
+    expect(res.statusCode).toBe(404);
   });
 });

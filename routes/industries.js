@@ -101,7 +101,10 @@ router.patch("/:code", async (req, res, next) => {
 
 router.delete("/:code", async (req, res, next) => {
   try {
-    const findInd = await db.query("SELECT code FROM industries");
+    const findInd = await db.query(
+      "SELECT code FROM industries WHERE code=$1",
+      [req.params.code]
+    );
     if (findInd.rows.length === 0) {
       throw new ExpressError(
         `Industry not found with code ${req.params.code}`,
