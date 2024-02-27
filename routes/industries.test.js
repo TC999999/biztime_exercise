@@ -71,15 +71,15 @@ describe("POST /industries", () => {
   });
 });
 
-describe("POST /industries/:industry_code", () => {
+describe("POST /industries/company/:code", () => {
   test("Creates a relationship between an industry and a company", async () => {
     const res = await request(app)
       .post("/industries")
       .send({ code: "tech", name: "Technology" });
 
     const res2 = await request(app)
-      .post(`/industries/${res.body.industry.code}`)
-      .send({ company_code: testCompany.code });
+      .post(`/industries/company/${res.body.industry.code}`)
+      .send({ comp_code: testCompany.code });
     expect(res2.statusCode).toBe(201);
     expect(res2.body).toEqual({
       company_industry_relationship: {
@@ -87,6 +87,27 @@ describe("POST /industries/:industry_code", () => {
         industry_code: "tech",
       },
     });
+  });
+
+  test("Responds with 404 when invalid industry code", async () => {
+    const res = await request(app)
+      .post(`/industries//company/idontexist`)
+      .send({ comp_code: testCompany.code });
+    expect(res.statusCode).toBe(404);
+  });
+
+  test("Responds with 404 when invalid company code", async () => {
+    const res = await request(app)
+      .post(`/industries//company/${testIndustry.code}`)
+      .send({ comp_code: "Idontexist" });
+    expect(res.statusCode).toBe(404);
+  });
+
+  test("Responds with 400 when when a relationship already exists", async () => {
+    const res = await request(app)
+      .post(`/industries//company/${testIndustry.code}`)
+      .send({ comp_code: testCompany.code });
+    expect(res.statusCode).toBe(400);
   });
 });
 
@@ -124,5 +145,42 @@ describe("DELETE /industries/:industry_code", () => {
   test("Responds with 404 when invalid industry code", async () => {
     const res = await request(app).delete(`/industries/idontexist`);
     expect(res.statusCode).toBe(404);
+  });
+});
+
+describe("DELETE /industries/company/:industry_code", () => {
+  test("Deletes a relationship between an industry and a company", async () => {
+    const res = await request(app)
+      .delete(`/industries/company/${testIndustry.code}`)
+      .send({ comp_code: testCompany.code });
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toEqual({
+      status: "relationship deleted",
+    });
+  });
+
+  test("Responds with 404 when invalid industry code", async () => {
+    const res = await request(app)
+      .delete(`/industries//company/idontexist`)
+      .send({ comp_code: testCompany.code });
+    expect(res.statusCode).toBe(404);
+  });
+
+  test("Responds with 404 when invalid company code", async () => {
+    const res = await request(app)
+      .delete(`/industries//company/${testIndustry.code}`)
+      .send({ comp_code: "Idontexist" });
+    expect(res.statusCode).toBe(404);
+  });
+
+  test("Responds with 400 when when no relationship is found", async () => {
+    await request(app)
+      .post("/industries")
+      .send({ code: "tech", name: "Technology" });
+
+    const res = await request(app)
+      .delete(`/industries//company/tech`)
+      .send({ comp_code: testCompany.code });
+    expect(res.statusCode).toBe(400);
   });
 });

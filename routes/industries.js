@@ -62,15 +62,46 @@ router.post("/", middleware.checkIndustriesPosts, async (req, res, next) => {
 });
 
 router.post(
-  "/:industry_code",
+  "/company/:code",
   middleware.checkIndustriesCompaniesPosts,
   async (req, res, next) => {
     try {
-      const { industry_code } = req.params;
-      const { company_code } = req.body;
+      const findInd = await db.query(
+        "SELECT code FROM industries WHERE code=$1",
+        [req.params.code]
+      );
+      if (findInd.rows.length === 0) {
+        throw new ExpressError(
+          `Industry not found with code ${req.params.code}`,
+          404
+        );
+      }
+
+      const findComp = await db.query(
+        "SELECT code FROM companies WHERE code=$1",
+        [req.body.comp_code]
+      );
+      if (findComp.rows.length === 0) {
+        throw new ExpressError(
+          `Company not found with code ${req.body.comp_code}`,
+          404
+        );
+      }
+
+      const findRel = await db.query(
+        "SELECT * FROM companies_industries WHERE comp_code=$1 AND industry_code=$2",
+        [req.body.comp_code, req.params.code]
+      );
+      if (findRel.rows.length > 0) {
+        throw new ExpressError(
+          `Relationship exists between company with code ${req.body.comp_code} and industry with code ${req.params.code}`,
+          400
+        );
+      }
+
       const results = await db.query(
         "INSERT INTO companies_industries (comp_code, industry_code) VALUES ($1, $2) RETURNING *",
-        [company_code, industry_code]
+        [req.body.comp_code, req.params.code]
       );
       return res
         .status(201)
@@ -117,5 +148,54 @@ router.delete("/:code", async (req, res, next) => {
     return next(err);
   }
 });
+
+router.delete(
+  "/company/:code",
+  middleware.checkIndustriesCompaniesPosts,
+  async (req, res, next) => {
+    try {
+      const findInd = await db.query(
+        "SELECT code FROM industries WHERE code=$1",
+        [req.params.code]
+      );
+      if (findInd.rows.length === 0) {
+        throw new ExpressError(
+          `Industry not found with code ${req.params.code}`,
+          404
+        );
+      }
+
+      const findComp = await db.query(
+        "SELECT code FROM companies WHERE code=$1",
+        [req.body.comp_code]
+      );
+      if (findComp.rows.length === 0) {
+        throw new ExpressError(
+          `Company not found with code ${req.body.comp_code}`,
+          404
+        );
+      }
+
+      const findRel = await db.query(
+        "SELECT * FROM companies_industries WHERE comp_code=$1 AND industry_code=$2",
+        [req.body.comp_code, req.params.code]
+      );
+      if (findRel.rows.length === 0) {
+        throw new ExpressError(
+          `No relationship found between company with code ${req.body.comp_code} and industry ${req.params.code}`,
+          400
+        );
+      }
+
+      await db.query(
+        "DELETE FROM companies_industries WHERE comp_code=$1 AND industry_code=$2",
+        [req.body.comp_code, req.params.code]
+      );
+      return res.json({ status: "relationship deleted" });
+    } catch (err) {
+      return next(err);
+    }
+  }
+);
 
 module.exports = router;

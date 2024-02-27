@@ -46,7 +46,7 @@ function checkIndustriesPosts(req, res, next) {
 
 function checkIndustriesCompaniesPosts(req, res, next) {
   try {
-    if (!req.body.company_code) {
+    if (!req.body.comp_code) {
       throw new ExpressError("Requires a company code", 400);
     } else {
       return next();
